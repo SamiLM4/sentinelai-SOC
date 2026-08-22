@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sentinelai-db
+    environment:
+      POSTGRES_USER: sentinelai
+      POSTGRES_PASSWORD: sentinelai123
+      POSTGRES_DB: sentinelai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
