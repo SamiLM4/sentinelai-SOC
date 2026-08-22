@@ -11,5 +11,16 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  api:
+    build: .
+    container_name: sentinelai-api
+    environment:
+      DATABASE_URL: postgresql://sentinelai:sentinelai123@postgres:5432/sentinelai
+      API_KEY: uma-chave-bem-dificil-de-adivinhar-123
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
 volumes:
   pgdata:
