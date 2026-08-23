@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 from security import verificar_api_key
-from deteccao import verificar_brute_force
+from deteccao import verificar_brute_force, verificar_login_anomalo, verificar_api_abuse
 import models
 import schemas
 
@@ -28,6 +28,8 @@ def criar_evento(
     db.refresh(novo_evento)
 
     verificar_brute_force(novo_evento, db)
+    verificar_login_anomalo(novo_evento, db)
+    verificar_api_abuse(novo_evento, db)
 
     return novo_evento
 
