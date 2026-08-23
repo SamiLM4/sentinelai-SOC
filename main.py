@@ -4,6 +4,8 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 from security import verificar_api_key
+# pyrefly: ignore [missing-import]
+from fastapi import FastAPI, Depends, HTTPException
 
 from deteccao import (
     verificar_brute_force,
@@ -71,3 +73,23 @@ def detalhar_incidente(incidente_id: int, db: Session = Depends(get_db)):
         "incidente": schemas.IncidenteResponse.model_validate(incidente),
         "timeline": [schemas.EventoResponse.model_validate(e) for e in timeline],
     }
+
+@app.patch("/incidentes/{incidente_id}/status", response_model=schemas.IncidenteResponse)
+def atualizar_status_incidente(
+    incidente_id: int,
+    novo_status: str,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(verificar_api_key),
+):
+    incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
+    if not incidente:
+        raise HTTPException(status_code=404, detail="Incidente não encontrado")
+
+    status_validos = ["aberto", "investigando", "resolvido", "falso_positivo"]
+    if novo_status not in status_validos:
+        raise HTTPException(status_code=400, detail=f"Status deve ser um de: {status_validos}")
+
+    incidente.status = novo_status
+    db.commit()
+    db.refresh(incidente)
+    return incidente

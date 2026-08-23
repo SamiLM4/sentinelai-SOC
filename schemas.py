@@ -26,6 +26,7 @@ class IncidenteResponse(BaseModel):
     descricao: str
     evidencias: Optional[dict[str, Any]] = None
     criado_em: datetime
+    status: str = "aberto"
 
     class Config:
         from_attributes = True
