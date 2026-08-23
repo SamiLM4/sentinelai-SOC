@@ -50,3 +50,24 @@ def listar_eventos(db: Session = Depends(get_db)):
 @app.get("/incidentes", response_model=list[schemas.IncidenteResponse])
 def listar_incidentes(db: Session = Depends(get_db)):
     return db.query(models.Incidente).order_by(models.Incidente.id.desc()).all()
+
+@app.get("/incidentes/{incidente_id}")
+def detalhar_incidente(incidente_id: int, db: Session = Depends(get_db)):
+    incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
+    if not incidente:
+        return {"erro": "Incidente não encontrado"}
+
+    eventos_ids = (incidente.evidencias or {}).get("eventos_ids", [])
+    timeline = []
+    if eventos_ids:
+        timeline = (
+            db.query(models.Evento)
+            .filter(models.Evento.id.in_(eventos_ids))
+            .order_by(models.Evento.criado_em.asc())
+            .all()
+        )
+
+    return {
+        "incidente": schemas.IncidenteResponse.model_validate(incidente),
+        "timeline": [schemas.EventoResponse.model_validate(e) for e in timeline],
+    }

@@ -93,7 +93,7 @@ def verificar_login_anomalo(evento: models.Evento, db: Session):
             f"Login bem-sucedido do usuário {evento.usuario} a partir de um IP "
             f"nunca utilizado antes ({evento.ip})"
         ),
-        evidencias={"ips_conhecidos": list(ips_anteriores), "evento_id": evento.id},
+        evidencias={"ips_conhecidos": list(ips_anteriores), "eventos_ids": [evento.id]},
     )
     db.add(incidente)
     db.commit()
@@ -183,7 +183,7 @@ def verificar_acesso_sensivel(evento: models.Evento, db: Session):
         descricao=(
             f"Usuário {evento.usuario} acessou o recurso sensível {recurso}"
         ),
-        evidencias={"evento_id": evento.id, "recurso": recurso},
+        evidencias={"eventos_ids": [evento.id], "recurso": recurso},
     )
     db.add(incidente)
     db.commit()
@@ -222,7 +222,7 @@ def verificar_comportamento_anomalo(evento: models.Evento, db: Session):
             f"Login do usuário {evento.usuario} às {hora}h "
             f"apresenta padrão fora do comportamento habitual (score ML: {score:.3f})"
         ),
-        evidencias={"evento_id": evento.id, "anomaly_score": float(score)},
+        evidencias={"eventos_ids": [evento.id], "anomaly_score": float(score)},
     )
     db.add(incidente)
     db.commit()
