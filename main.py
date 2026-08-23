@@ -7,6 +7,8 @@ from security import verificar_api_key
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, Depends, HTTPException
 
+from ia import gerar_analise_incidente
+
 from deteccao import (
     verificar_brute_force,
     verificar_login_anomalo,
@@ -93,3 +95,32 @@ def atualizar_status_incidente(
     db.commit()
     db.refresh(incidente)
     return incidente
+
+# GEN IA
+
+@app.get("/incidentes/{incidente_id}/analise")
+def analisar_incidente(
+    incidente_id: int,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(verificar_api_key),
+):
+    incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
+    if not incidente:
+        raise HTTPException(status_code=404, detail="Incidente não encontrado")
+
+    eventos_ids = (incidente.evidencias or {}).get("eventos_ids", [])
+    timeline = []
+    if eventos_ids:
+        timeline = (
+            db.query(models.Evento)
+            .filter(models.Evento.id.in_(eventos_ids))
+            .order_by(models.Evento.criado_em.asc())
+            .all()
+        )
+
+    incidente_dict = schemas.IncidenteResponse.model_validate(incidente).model_dump(mode="json")
+    timeline_dict = [schemas.EventoResponse.model_validate(e).model_dump(mode="json") for e in timeline]
+
+    analise = gerar_analise_incidente(incidente_dict, timeline_dict)
+
+    return {"incidente_id": incidente_id, "analise": analise}
