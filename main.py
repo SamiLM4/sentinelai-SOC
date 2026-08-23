@@ -10,6 +10,7 @@ from deteccao import (
     verificar_login_anomalo,
     verificar_api_abuse,
     verificar_acesso_sensivel,
+    verificar_comportamento_anomalo,
 )
 
 import models
@@ -38,6 +39,7 @@ def criar_evento(
     verificar_login_anomalo(novo_evento, db)
     verificar_api_abuse(novo_evento, db)
     verificar_acesso_sensivel(novo_evento, db)
+    verificar_comportamento_anomalo(novo_evento, db)
 
     return novo_evento
 

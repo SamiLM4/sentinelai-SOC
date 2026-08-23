@@ -2,6 +2,13 @@ from datetime import datetime, timedelta, timezone
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
 import models
+import pandas as pd
+# pyrefly: ignore [missing-import]
+import numpy as np
+# pyrefly: ignore [missing-import]
+import joblib
+
+_modelo_anomalia = joblib.load("modelo_anomalia.pkl")
 
 LIMITE_FALHAS = 5
 JANELA_MINUTOS = 2
@@ -177,6 +184,45 @@ def verificar_acesso_sensivel(evento: models.Evento, db: Session):
             f"Usuário {evento.usuario} acessou o recurso sensível {recurso}"
         ),
         evidencias={"evento_id": evento.id, "recurso": recurso},
+    )
+    db.add(incidente)
+    db.commit()
+    db.refresh(incidente)
+    return incidente
+
+# ML
+
+LIMIAR_ANOMALIA = -0.05
+
+def verificar_comportamento_anomalo(evento: models.Evento, db: Session):
+    if evento.tipo != "login" or evento.sucesso is not True:
+        return None
+
+    hora = evento.criado_em.hour
+    dia_semana = evento.criado_em.weekday()
+
+    hora_sin = np.sin(2 * np.pi * hora / 24)
+    hora_cos = np.cos(2 * np.pi * hora / 24)
+
+    features = pd.DataFrame(
+        [[hora_sin, hora_cos, dia_semana]],
+        columns=["hora_sin", "hora_cos", "dia_semana"],
+    )
+    score = _modelo_anomalia.decision_function(features)[0]
+
+    if score > LIMIAR_ANOMALIA:
+        return None
+
+    incidente = models.Incidente(
+        tipo="comportamento_anomalo_ml",
+        severidade="media",
+        ip=evento.ip,
+        usuario=evento.usuario,
+        descricao=(
+            f"Login do usuário {evento.usuario} às {hora}h "
+            f"apresenta padrão fora do comportamento habitual (score ML: {score:.3f})"
+        ),
+        evidencias={"evento_id": evento.id, "anomaly_score": float(score)},
     )
     db.add(incidente)
     db.commit()
