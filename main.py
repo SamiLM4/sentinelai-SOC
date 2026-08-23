@@ -1,7 +1,11 @@
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, Depends
+
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
+# pyrefly: ignore [missing-import]
+from sqlalchemy import func as sql_func
+
 from database import engine, Base, get_db
 from security import verificar_api_key
 # pyrefly: ignore [missing-import]
@@ -108,8 +112,6 @@ def atualizar_status_incidente(
     db.refresh(incidente)
     return incidente
 
-# GEN IA
-
 @app.get("/incidentes/{incidente_id}/analise")
 def analisar_incidente(
     incidente_id: int,
@@ -153,4 +155,20 @@ def analisar_incidente(
         "analise": analise,
         "cache": False,
         "analisado_em": incidente.analisado_em,
+    }
+
+@app.get("/metricas")
+def obter_metricas(db: Session = Depends(get_db)):
+    total_eventos = db.query(models.Evento).count()
+    total_incidentes = db.query(models.Incidente).count()
+    incidentes_abertos = db.query(models.Incidente).filter(models.Incidente.status == "aberto").count()
+    total_usuarios = db.query(sql_func.count(sql_func.distinct(models.Evento.usuario))).scalar()
+    total_ips = db.query(sql_func.count(sql_func.distinct(models.Evento.ip))).scalar()
+
+    return {
+        "total_eventos": total_eventos,
+        "total_incidentes": total_incidentes,
+        "incidentes_abertos": incidentes_abertos,
+        "total_usuarios": total_usuarios,
+        "total_ips": total_ips,
     }
