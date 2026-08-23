@@ -142,3 +142,43 @@ def verificar_api_abuse(evento: models.Evento, db: Session):
     db.commit()
     db.refresh(incidente)
     return incidente
+
+RECURSOS_SENSIVEIS = ["/admin", "/financeiro", "/rh"]
+JANELA_ACESSO_MINUTOS = 10
+
+def verificar_acesso_sensivel(evento: models.Evento, db: Session):
+    if evento.tipo != "acesso" or not evento.detalhes:
+        return None
+
+    recurso = evento.detalhes.get("recurso")
+    if not recurso or not any(recurso.startswith(p) for p in RECURSOS_SENSIVEIS):
+        return None
+
+    limite_tempo = datetime.now(timezone.utc) - timedelta(minutes=JANELA_ACESSO_MINUTOS)
+
+    incidente_existente = (
+        db.query(models.Incidente)
+        .filter(
+            models.Incidente.tipo == "acesso_sensivel",
+            models.Incidente.usuario == evento.usuario,
+            models.Incidente.criado_em >= limite_tempo,
+        )
+        .first()
+    )
+    if incidente_existente:
+        return None
+
+    incidente = models.Incidente(
+        tipo="acesso_sensivel",
+        severidade="alta",
+        ip=evento.ip,
+        usuario=evento.usuario,
+        descricao=(
+            f"Usuário {evento.usuario} acessou o recurso sensível {recurso}"
+        ),
+        evidencias={"evento_id": evento.id, "recurso": recurso},
+    )
+    db.add(incidente)
+    db.commit()
+    db.refresh(incidente)
+    return incidente
