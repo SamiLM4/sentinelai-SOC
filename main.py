@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 from security import verificar_api_key
+from deteccao import verificar_brute_force
 import models
 import schemas
 
@@ -25,8 +26,15 @@ def criar_evento(
     db.add(novo_evento)
     db.commit()
     db.refresh(novo_evento)
+
+    verificar_brute_force(novo_evento, db)
+
     return novo_evento
 
 @app.get("/eventos", response_model=list[schemas.EventoResponse])
 def listar_eventos(db: Session = Depends(get_db)):
     return db.query(models.Evento).order_by(models.Evento.id.desc()).all()
+
+@app.get("/incidentes", response_model=list[schemas.IncidenteResponse])
+def listar_incidentes(db: Session = Depends(get_db)):
+    return db.query(models.Incidente).order_by(models.Incidente.id.desc()).all()

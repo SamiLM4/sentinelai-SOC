@@ -16,3 +16,16 @@ class EventoResponse(EventoCreate):
 
     class Config:
         from_attributes = True
+
+class IncidenteResponse(BaseModel):
+    id: int
+    tipo: str
+    severidade: str
+    ip: Optional[str] = None
+    usuario: Optional[str] = None
+    descricao: str
+    evidencias: Optional[dict[str, Any]] = None
+    criado_em: datetime
+
+    class Config:
+        from_attributes = True
