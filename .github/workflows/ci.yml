@@ -24,3 +24,6 @@ jobs:
 
       - name: Rodar testes
         run: python -m pytest -v
+        env:
+          OPENAI_API_KEY: "chave-fake-para-testes"
+          API_KEY: "uma-chave-bem-dificil-de-adivinhar-123"
