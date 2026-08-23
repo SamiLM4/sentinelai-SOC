@@ -27,3 +27,5 @@ class Incidente(Base):
     evidencias = Column(JSON, nullable=True)   # ex: lista dos eventos que geraram o incidente
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String, default="aberto")
+    analise_ia = Column(String, nullable=True)
+    analisado_em = Column(DateTime(timezone=True), nullable=True)

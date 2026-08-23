@@ -7,6 +7,8 @@ from security import verificar_api_key
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, Depends, HTTPException
 
+from datetime import datetime, timezone
+
 from ia import gerar_analise_incidente
 
 from deteccao import (
@@ -101,12 +103,21 @@ def atualizar_status_incidente(
 @app.get("/incidentes/{incidente_id}/analise")
 def analisar_incidente(
     incidente_id: int,
+    forcar: bool = False,
     db: Session = Depends(get_db),
     api_key: str = Depends(verificar_api_key),
 ):
     incidente = db.query(models.Incidente).filter(models.Incidente.id == incidente_id).first()
     if not incidente:
         raise HTTPException(status_code=404, detail="Incidente não encontrado")
+
+    if incidente.analise_ia and not forcar:
+        return {
+            "incidente_id": incidente_id,
+            "analise": incidente.analise_ia,
+            "cache": True,
+            "analisado_em": incidente.analisado_em,
+        }
 
     eventos_ids = (incidente.evidencias or {}).get("eventos_ids", [])
     timeline = []
@@ -123,4 +134,13 @@ def analisar_incidente(
 
     analise = gerar_analise_incidente(incidente_dict, timeline_dict)
 
-    return {"incidente_id": incidente_id, "analise": analise}
+    incidente.analise_ia = analise
+    incidente.analisado_em = datetime.now(timezone.utc)
+    db.commit()
+
+    return {
+        "incidente_id": incidente_id,
+        "analise": analise,
+        "cache": False,
+        "analisado_em": incidente.analisado_em,
+    }
