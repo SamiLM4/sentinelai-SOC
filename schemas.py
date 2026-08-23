@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, Any
 from datetime import datetime
 
@@ -14,8 +14,7 @@ class EventoResponse(EventoCreate):
     id: int
     criado_em: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class IncidenteResponse(BaseModel):
     id: int
@@ -30,5 +29,4 @@ class IncidenteResponse(BaseModel):
     analise_ia: Optional[str] = None
     analisado_em: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
