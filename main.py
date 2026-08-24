@@ -27,7 +27,6 @@ import models
 import schemas
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
 app = FastAPI()
 
@@ -35,18 +34,9 @@ app = FastAPI()
 def criar_tabelas():
     Base.metadata.create_all(bind=engine)
 
-origins = [
-    "http://localhost:5173",
-]
-
-frontend_url = os.getenv("FRONTEND_URL")
-
-if frontend_url:
-    origins.append(frontend_url)
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
