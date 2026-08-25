@@ -125,14 +125,3 @@ python -m pytest -v
 | `PATCH` | `/incidentes/{id}/status` | Atualiza status do incidente |
 | `GET` | `/incidentes/{id}/analise` | Gera/retorna análise por IA (cacheada) |
 | `GET` | `/metricas` | Métricas agregadas do sistema |
-
-## 🗺️ Próximos passos
-
-- [ ] Migrations com Alembic (hoje o schema é alterado manualmente)
-- [ ] Mais features no modelo de ML (frequência de acessos, geolocalização de IP)
-- [ ] Correlação de eventos entre múltiplas regras (grafo de incidentes)
-- [ ] Autenticação de usuário no dashboard (hoje só a API é protegida)
-
-## 📄 Licença
-
-Este projeto é livre para fins de estudo e portfólio.
