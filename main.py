@@ -36,10 +36,8 @@ def criar_tabelas():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://sentinelai-dashboard-ten.vercel.app",
-    ],
+    allow_origins=["http://localhost:5173"],
+    allow_origin_regex=r"https://sentinelai-dashboard.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
